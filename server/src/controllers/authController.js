@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const { hashPassword, comparePassword } = require('../utils/helpers');
+const logger = require('../utils/logger'); // Importar logger
 
 // Register a new user
 exports.register = async (req, res) => {
@@ -40,54 +41,48 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
-    console.log('Login attempt:', { username });
+    logger.info(`Intento de login: ${username}`);
     
     // Find user by username
     const user = await User.findOne({ username });
-    console.log('User found:', user ? 'Yes' : 'No');
     
     if (!user) {
-      return res.status(401).json({ message: 'Credenciales inválidas (usuario no encontrado)' });
+      logger.warn(`Intento de login fallido: usuario no encontrado - ${username}`);
+      return res.status(401).json({ message: 'Credenciales inválidas' });
     }
     
-    console.log('User data:', {
-      id: user._id,
-      username: user.username,
-      role: user.role,
-      hasPassword: !!user.password
-    });
+    logger.info(`Usuario encontrado: ${username}, ID: ${user._id}, Rol: ${user.role}`);
     
-    // Important! Use the username to hash the password
-    console.log('Comparing password...');
+    // Verify password
     const isMatch = await user.comparePassword(password);
-    console.log('Password match:', isMatch);
     
     if (!isMatch) {
-      return res.status(401).json({ message: 'Credenciales inválidas (contraseña incorrecta)' });
+      logger.warn(`Intento de login fallido: contraseña incorrecta - ${username}`);
+      return res.status(401).json({ message: 'Credenciales inválidas' });
     }
     
-    // Create a token
+    // Create token
     const token = jwt.sign(
-      { 
-        id: user._id, 
-        role: user.role || 'cashier' 
-      },
+      { id: user._id, role: user.role },
       config.JWT_SECRET,
       { expiresIn: '24h' }
     );
+    
+    logger.info(`Login exitoso: ${username}, Rol: ${user.role}`);
     
     res.status(200).json({
       token,
       user: {
         id: user._id,
         username: user.username,
-        role: user.role || 'cashier', 
-        ...(user.email && { email: user.email })
+        role: user.role
       }
     });
     
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Error del servidor: ' + error.message });
+    logger.error(`Error en autenticación: ${error.message}`, { 
+      stack: error.stack 
+    });
+    res.status(500).json({ message: 'Error del servidor' });
   }
 };

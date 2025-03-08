@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const logger = require('../utils/logger');
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -43,12 +44,15 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.comparePassword = async function(password) {
   try {
     const combinedPassword = `${this.username}:${password}`;
-    console.log('Combined password for comparison:', combinedPassword);
+    logger.info(`Comparando contraseña para ${this.username} (combinada)`);
     const result = await bcrypt.compare(combinedPassword, this.password);
-    console.log('bcrypt compare result:', result);
+    logger.info(`Resultado de comparación para ${this.username}: ${result}`);
     return result;
   } catch (error) {
-    console.error('Error comparing password:', error);
+    logger.error(`Error comparando contraseña: ${error.message}`, {
+      user: this.username,
+      stack: error.stack
+    });
     return false;
   }
 };
