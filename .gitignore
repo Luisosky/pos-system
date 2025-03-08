@@ -9,6 +9,7 @@
 /server/logs
 /server/.env
 /server/src/scripts/seedDemoUsers.js
+/server/credentials.json
 
 # Global
 node_modules
