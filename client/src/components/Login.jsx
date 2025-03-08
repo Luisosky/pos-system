@@ -21,6 +21,30 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Verify if demo mode is enabled
+  const isDemoMode = process.env.REACT_APP_DEMO_MODE === 'true';
+  
+  // Component for demo credentials
+  const DemoCredentials = () => {
+    if (!isDemoMode) return null;
+    
+    return (
+      <Box sx={{ mt: 2, p: 2, border: '1px dashed grey', borderRadius: 1 }}>
+        <Typography variant="subtitle2" color="textSecondary">
+          Credenciales de demostración:
+        </Typography>
+        <Box>
+          <Typography variant="body2">
+            Admin: {process.env.REACT_APP_DEMO_ADMIN || 'admin'} / {process.env.REACT_APP_DEMO_ADMIN_PASSWORD || '********'}
+          </Typography>
+          <Typography variant="body2">
+            Cajero: {process.env.REACT_APP_DEMO_CASHIER || 'cajero'} / {process.env.REACT_APP_DEMO_CASHIER_PASSWORD || '********'}
+          </Typography>
+        </Box>
+      </Box>
+    );
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCredentials(prev => ({
@@ -184,6 +208,9 @@ const Login = ({ onLogin }) => {
             </Button>
           </Box>
         </Box>
+
+        {/* Credenciales demo condicionales */}
+        <DemoCredentials />
       </Paper>
     </Box>
   );
