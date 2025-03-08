@@ -48,11 +48,15 @@ exports.login = async (req, res) => {
     );
     
     if (!user) {
+      // Add console.log for debugging
+      console.log(`Usuario no encontrado: ${username}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     // Check password using username in comparison
     const isMatch = await comparePassword(password, user.password, user.username);
+    // Add console.log for debugging
+    console.log(`Verificación de contraseña para ${username}: ${isMatch}`);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -68,6 +72,7 @@ exports.login = async (req, res) => {
       } 
     });
   } catch (error) {
+    console.error('Error de autenticación:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

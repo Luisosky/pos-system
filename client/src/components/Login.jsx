@@ -35,10 +35,10 @@ const Login = ({ onLogin }) => {
         </Typography>
         <Box>
           <Typography variant="body2">
-            Admin: {process.env.REACT_APP_DEMO_ADMIN || 'admin'} / {process.env.REACT_APP_DEMO_ADMIN_PASSWORD || '********'}
+            Admin: admin / admin123
           </Typography>
           <Typography variant="body2">
-            Cajero: {process.env.REACT_APP_DEMO_CASHIER || 'cajero'} / {process.env.REACT_APP_DEMO_CASHIER_PASSWORD || '********'}
+            Cajero: cajero / cajero123
           </Typography>
         </Box>
       </Box>
@@ -72,14 +72,6 @@ const Login = ({ onLogin }) => {
       setError(err.response?.data?.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = (userType) => {
-    if (userType === 'user') {
-      setCredentials({username: 'usuario', password: 'userpass'});
-    } else {
-      setCredentials({username: 'admin', password: 'adminpass'});
     }
   };
 
@@ -190,26 +182,9 @@ const Login = ({ onLogin }) => {
               ¿Olvidó su clave?
             </Link>
           </Box>
-
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-            <Button 
-              variant="outlined" 
-              size="small"
-              onClick={() => handleDemoLogin('user')}
-            >
-              Demo Usuario
-            </Button>
-            <Button 
-              variant="outlined" 
-              size="small"
-              onClick={() => handleDemoLogin('admin')}
-            >
-              Demo Admin
-            </Button>
-          </Box>
         </Box>
-
-        {/* Credenciales demo condicionales */}
+        
+        {/* DemoCredentials */}
         <DemoCredentials />
       </Paper>
     </Box>

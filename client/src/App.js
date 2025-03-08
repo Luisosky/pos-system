@@ -83,6 +83,7 @@ function App() {
   // Log in using the authentication service
   const handleLogin = async (username, password) => {
     try {
+      console.log('Intentando login con:', { username });
       const response = await authService.login({ username, password });
       
       // Save token and user data in local storage
@@ -99,7 +100,7 @@ function App() {
       
       return true;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Error en login:', error);
       return false;
     }
   };
