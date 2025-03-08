@@ -18,6 +18,8 @@ const Login = ({ onLogin }) => {
     username: '',
     password: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,21 +33,29 @@ const Login = ({ onLogin }) => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();    
-    // Mock user database
-    const users = {
-      'usuario': {role: 'user', password: 'userpass'},
-      'admin': {role: 'admin', password: 'adminpass'}
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
     
-    const user = users[credentials.username];
-    
-    if (user && user.password === credentials.password) {
-      onLogin(credentials.username, user.role);
-      console.log(`Logged in as ${credentials.username} with role ${user.role}`);
+    try {
+      const success = await onLogin(credentials.username, credentials.password);
+      
+      if (!success) {
+        setError('Credenciales inválidas');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = (userType) => {
+    if (userType === 'user') {
+      setCredentials({username: 'usuario', password: 'userpass'});
     } else {
-      alert('Invalid credentials');
+      setCredentials({username: 'admin', password: 'adminpass'});
     }
   };
 
@@ -140,10 +150,17 @@ const Login = ({ onLogin }) => {
             variant="contained"
             size="large"
             sx={{ mt: 2, mb: 3 }}
+            disabled={loading}
           >
-            INICIAR SESIÓN
+            {loading ? 'Cargando...' : 'INICIAR SESIÓN'}
           </Button>
           
+          {error && (
+            <Typography color="error" variant="body2" sx={{ mb: 2 }}>
+              {error}
+            </Typography>
+          )}
+
           <Box sx={{ textAlign: 'center' }}>
             <Link href="#" variant="body2">
               ¿Olvidó su clave?
@@ -154,18 +171,14 @@ const Login = ({ onLogin }) => {
             <Button 
               variant="outlined" 
               size="small"
-              onClick={() => {
-                setCredentials({username: 'usuario', password: 'userpass'});
-              }}
+              onClick={() => handleDemoLogin('user')}
             >
               Demo Usuario
             </Button>
             <Button 
               variant="outlined" 
               size="small"
-              onClick={() => {
-                setCredentials({username: 'admin', password: 'adminpass'});
-              }}
+              onClick={() => handleDemoLogin('admin')}
             >
               Demo Admin
             </Button>

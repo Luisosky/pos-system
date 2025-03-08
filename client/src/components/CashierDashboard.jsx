@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Container, 
@@ -20,8 +20,49 @@ import {
   Warning
 } from '@mui/icons-material';
 import Navbar from './Navbar';
+import { orderService, notificationService } from '../services';
 
 const CashierDashboard = ({ username, onNavigate }) => {
+  const [dashboardData, setDashboardData] = useState({
+    sales: {
+      total: 0,
+      ticketsCount: 0,
+      frequentCustomer: 0
+    },
+    notifications: []
+  });
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Get daily sales summary
+        const salesData = await orderService.getDailySummary();
+        
+        // Get notifications 
+        const notifications = await notificationService.getNotifications();
+        
+        setDashboardData({
+          sales: {
+            total: salesData.totalSales || 0,
+            ticketsCount: salesData.orderCount || 0,
+            frequentCustomer: salesData.frequentCustomerPercentage || 0
+          },
+          notifications: notifications || []
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // Save data from local storage
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDashboardData();
+  }, []);
+
   const currentDate = new Date().toLocaleString('es-ES', {
     weekday: 'long',
     year: 'numeric',
@@ -30,19 +71,6 @@ const CashierDashboard = ({ username, onNavigate }) => {
     hour: '2-digit',
     minute: '2-digit'
   });
-
-  // Dashboard data 
-  const dashboardData = {
-    sales: {
-      total: 1250.75,
-      ticketsCount: 15,
-      frequentCustomer: 30
-    },
-    notifications: [
-      { id: 1, type: 'success', message: 'Caja abierta a las 8:00' },
-      { id: 2, type: 'warning', message: 'Stock bajo de producto Leche' }
-    ]
-  };
 
   const getTimeBasedGreeting = () => {
     const currentHour = new Date().getHours();

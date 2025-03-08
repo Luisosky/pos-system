@@ -10,18 +10,22 @@ import POS from './components/POS';
 import Payment from './components/Payment';
 import ProductManagement from './components/ProductManagement';
 
-// Create Navigation Context
+// Import services
+import { authService, orderService } from './services';
+
+// Crate context for navigation
 export const NavigationContext = React.createContext();
 
 function App() {
-  // Authentication state
+  // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState({
+    id: '',
     username: '',
-    role: '' // 'admin' or 'cashier'
+    role: '' // 'admin' o 'cashier'
   });
   
-  // Navigation state with history
+  // Navigation state
   const [currentScreen, setCurrentScreen] = useState('login');
   const [navigationHistory, setNavigationHistory] = useState([]);
   
@@ -30,65 +34,124 @@ function App() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
 
-  // Enhanced navigation function
+  // Verify token and user data on first render
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (token && storedUser) {
+        try {
+          // Also validate token with the server
+          const userData = JSON.parse(storedUser);
+          setIsAuthenticated(true);
+          setCurrentUser({
+            id: userData.id,
+            username: userData.username,
+            role: userData.role
+          });
+          setCurrentScreen(userData.role === 'admin' ? 'adminDashboard' : 'cashierDashboard');
+        } catch (error) {
+          console.error('Error validating authentication:', error);
+          handleLogout(); 
+        }
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  // Navigate function to change screen
   const navigate = (screen) => {
-    // Add current screen to history before changing screens
     if (currentScreen !== 'login') {
       setNavigationHistory(prev => [...prev, currentScreen]);
     }
     setCurrentScreen(screen);
   };
   
-  // Go back function
+  // Go back to previous screen
   const goBack = () => {
     if (navigationHistory.length > 0) {
-      // Get the last screen from history
       const prevScreen = navigationHistory[navigationHistory.length - 1];
-      
-      // Remove it from history
       setNavigationHistory(prev => prev.slice(0, prev.length - 1));
-      
-      // Set it as current screen
       setCurrentScreen(prevScreen);
-      
       return true;
     }
     return false; 
   };
-  
-  // Check if we can go back
-  const canGoBack = navigationHistory.length > 0;
 
-  // Handle login
-  const handleLogin = (username, role) => {
-    setIsAuthenticated(true);
-    setCurrentUser({
-      username,
-      role: role || (username.toLowerCase().includes('admin') ? 'admin' : 'cashier')
-    });
-    
-    // Navigate to appropriate dashboard without adding to history
-    setCurrentScreen(role === 'admin' ? 'adminDashboard' : 'cashierDashboard');
-    setNavigationHistory([]);
+  // Log in using the authentication service
+  const handleLogin = async (username, password) => {
+    try {
+      const response = await authService.login({ username, password });
+      
+      // Save token and user data in local storage
+      setIsAuthenticated(true);
+      setCurrentUser({
+        id: response.user.id,
+        username: response.user.username,
+        role: response.user.role
+      });
+      
+      // Navigate to the appropriate dashboard
+      setCurrentScreen(response.user.role === 'admin' ? 'adminDashboard' : 'cashierDashboard');
+      setNavigationHistory([]);
+      
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    }
   };
 
-  // Handle logout
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser({ username: '', role: '' });
-    setCurrentScreen('login');
-    setNavigationHistory([]);
+  // Log out and clear local state
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local state
+      setIsAuthenticated(false);
+      setCurrentUser({ id: '', username: '', role: '' });
+      setCurrentScreen('login');
+      setNavigationHistory([]);
+    }
   };
 
   // Handle payment completion
-  const handlePaymentComplete = (paymentData) => {
-    console.log('Payment completed:', paymentData);
-    setCartItems([]);
-    setShowPaymentDialog(false);
-    navigate('cashierDashboard'); 
+  const handlePaymentComplete = async (paymentData) => {
+    try {
+      // Create Order Object with the data to send to the server
+      const orderData = {
+        user: currentUser.id,
+        customerName: paymentData.customerName || 'Anónimo',
+        products: cartItems.map(item => ({
+          product: item._id || item.id,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        totalAmount: totalAmount,
+        paymentMethod: paymentData.paymentMethod
+      };
+      
+      // Send order data to the server
+      const createdOrder = await orderService.createOrder(orderData);
+      console.log('Order created:', createdOrder);
+      
+      // Clear cart and navigate to the dashboard
+      setCartItems([]);
+      setTotalAmount(0);
+      navigate(currentUser.role === 'admin' ? 'adminDashboard' : 'cashierDashboard');
+      
+      return createdOrder;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('Error al procesar el pago. Intente nuevamente.');
+    }
   };
 
-  // Navigation context value
+  // Context value for navigation
   const navigationContextValue = {
     currentScreen,
     navigate,
@@ -125,6 +188,7 @@ function App() {
         return (
           <POS 
             username={currentUser.username}
+            userId={currentUser.id}
             cartItems={cartItems}
             setCartItems={setCartItems}
             totalAmount={totalAmount}
@@ -133,17 +197,15 @@ function App() {
           />
         );
       
-        case 'payment':
-          return (
-            <Payment
-              username={currentUser.username}
-              amount={totalAmount}
-              onComplete={() => {
-                setCartItems([]);
-                navigate(currentUser.role === 'admin' ? 'adminDashboard' : 'cashierDashboard');
-              }}
-            />
-          );
+      case 'payment':
+        return (
+          <Payment
+            open={true}
+            onClose={() => navigate('pos')}
+            total={totalAmount}
+            onComplete={handlePaymentComplete}
+          />
+        );
 
       case 'products':
         return (

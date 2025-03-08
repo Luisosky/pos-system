@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -33,30 +33,42 @@ import {
   Add
 } from '@mui/icons-material';
 import Navbar from './Navbar';
-
-// Mock product data
-const mockProducts = [
-  { id: 1, name: 'Manzana', category: 'Frutas', price: 5.99, image: '🍎' },
-  { id: 2, name: 'Pizza', category: 'Alimentos', price: 8.99, image: '🍕' },
-  { id: 3, name: 'Refresco', category: 'Bebidas', price: 2.50, image: '🥤' },
-  { id: 4, name: 'Queso', category: 'Lácteos', price: 4.25, image: '🧀' },
-  { id: 5, name: 'Pan', category: 'Panadería', price: 3.49, image: '🥖' },
-  { id: 6, name: 'Pollo', category: 'Carnes', price: 9.99, image: '🍗' },
-  { id: 7, name: 'Papel', category: 'Hogar', price: 1.99, image: '🧻' },
-  { id: 8, name: 'Leche', category: 'Lácteos', price: 2.25, image: '🥛' },
-];
-
-// Product categories
-const categories = ['Todos', 'Bebidas', 'Alimentos', 'Frutas', 'Lácteos', 'Panadería', 'Carnes', 'Hogar'];
+import { productService, orderService } from '../services';
 
 const POS = ({ username }) => {
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState([]);
   const [customer, setCustomer] = useState('Anónimo');
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(['Todos']);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   
-  // Filter products based on category and search term
-  const filteredProducts = mockProducts.filter(product => 
+  // Load products and categories
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await productService.getAllProducts();
+        setProducts(data);
+        
+        // Get unique categories from products
+        const uniqueCategories = ['Todos', ...new Set(data.map(item => item.category))];
+        setCategories(uniqueCategories);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('No se pudieron cargar los productos');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProducts();
+  }, []);
+  
+  // Filter products by category and search term
+  const filteredProducts = products.filter(product => 
     (selectedCategory === 'Todos' || product.category === selectedCategory) &&
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -108,6 +120,34 @@ const POS = ({ username }) => {
   
   // Calculate total
   const total = subtotal + tax;
+
+  // Method to handle payment processing
+  const handlePayment = async (paymentDetails) => {
+    try {
+      const orderData = {
+        customer: customer,
+        products: cart.map(item => ({
+          productId: item._id,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: total,
+        subtotal: subtotal,
+        tax: tax,
+        paymentMethod: paymentDetails.paymentMethod,
+        cashierName: username
+      };
+      
+      const createdOrder = await orderService.createOrder(orderData);
+      // Clear cart after successful order creation
+      setCart([]);
+      
+      return createdOrder;
+    } catch (err) {
+      console.error('Error creating order:', err);
+      throw err; // Send error to the caller
+    }
+  };
 
   return (
     <Box sx={{ flexGrow: 1, height: '100vh', display: 'flex', flexDirection: 'column' }}>

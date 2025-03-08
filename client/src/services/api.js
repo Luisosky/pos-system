@@ -1,4 +1,4 @@
-// Code to create an axios instance with base URL and request/response interceptors for adding auth token and error handling
+//     Code to create an axios instance with base URL and request/response interceptors for adding auth token and error handling
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -21,23 +21,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
-);
-
-// Response interceptor for error handling
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const { response } = error;
-    
-    // Auto logout if 401 response from API
-    if (response && response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-    
-    return Promise.reject(error);
-  }
 );
 
 export default api;

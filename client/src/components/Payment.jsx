@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -21,15 +21,23 @@ import {
 } from '@mui/icons-material';
 
 const Payment = ({ open, onClose, total, onComplete }) => {
-  const [paymentMethod, setPaymentMethod] = useState('');
+  // State for payment method, amount received, and change
+  const [paymentMethod, setPaymentMethod] = useState('efectivo'); // Default to cash
   const [amountReceived, setAmountReceived] = useState('');
   const [change, setChange] = useState(0);
   const [processing, setProcessing] = useState(false);
+  
+  // Options for payment method select
+  const paymentOptions = [
+    { value: 'efectivo', label: 'Efectivo' },
+    { value: 'tarjeta', label: 'Tarjeta' },
+    { value: 'transferencia', label: 'Transferencia' }
+  ];
 
   // Reset state when dialog opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
-      setPaymentMethod('');
+      setPaymentMethod('efectivo');
       setAmountReceived('');
       setChange(0);
       setProcessing(false);
@@ -37,7 +45,7 @@ const Payment = ({ open, onClose, total, onComplete }) => {
   }, [open]);
 
   // Calculate change when amount received changes
-  React.useEffect(() => {
+  useEffect(() => {
     const received = parseFloat(amountReceived) || 0;
     if (received >= total) {
       setChange(received - total);
@@ -50,7 +58,7 @@ const Payment = ({ open, onClose, total, onComplete }) => {
     setPaymentMethod(method);
     
     // For non-cash payments, we assume exact amount
-    if (method !== 'cash') {
+    if (method !== 'efectivo') {
       setAmountReceived(total.toString());
       setChange(0);
     }
@@ -83,11 +91,33 @@ const Payment = ({ open, onClose, total, onComplete }) => {
   const isPaymentValid = () => {
     if (!paymentMethod) return false;
     
-    if (paymentMethod === 'cash') {
+    if (paymentMethod === 'efectivo') {
       return parseFloat(amountReceived) >= total;
     }
     
     return true;
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setProcessing(true);
+      
+      // Prepare payment details
+      const paymentDetails = {
+        method: paymentMethod,
+        amountReceived: parseFloat(amountReceived),
+        change: change
+      };
+      
+      // Call the onComplete callback with payment details
+      await onComplete(paymentDetails);
+      
+      onClose();
+    } catch (error) {
+      console.error('Error processing payment:', error);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -119,24 +149,24 @@ const Payment = ({ open, onClose, total, onComplete }) => {
       
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Button
-          variant={paymentMethod === 'cash' ? 'contained' : 'outlined'}
-          onClick={() => handlePaymentMethodSelect('cash')}
+          variant={paymentMethod === 'efectivo' ? 'contained' : 'outlined'}
+          onClick={() => handlePaymentMethodSelect('efectivo')}
           startIcon={<AttachMoney />}
           sx={{ flex: 1, mr: 1, py: 1.5 }}
         >
           EFECTIVO
         </Button>
         <Button
-          variant={paymentMethod === 'card' ? 'contained' : 'outlined'}
-          onClick={() => handlePaymentMethodSelect('card')}
+          variant={paymentMethod === 'tarjeta' ? 'contained' : 'outlined'}
+          onClick={() => handlePaymentMethodSelect('tarjeta')}
           startIcon={<CreditCard />}
           sx={{ flex: 1, mx: 1, py: 1.5 }}
         >
           TARJETA
         </Button>
         <Button
-          variant={paymentMethod === 'transfer' ? 'contained' : 'outlined'}
-          onClick={() => handlePaymentMethodSelect('transfer')}
+          variant={paymentMethod === 'transferencia' ? 'contained' : 'outlined'}
+          onClick={() => handlePaymentMethodSelect('transferencia')}
           startIcon={<AccountBalance />}
           sx={{ flex: 1, mx: 1, py: 1.5 }}
         >
@@ -152,7 +182,7 @@ const Payment = ({ open, onClose, total, onComplete }) => {
         </Button>
       </Box>
       
-      {paymentMethod === 'cash' && (
+      {paymentMethod === 'efectivo' && (
         <>
           <Typography variant="body1" gutterBottom>
             MONTO RECIBIDO:
@@ -178,7 +208,7 @@ const Payment = ({ open, onClose, total, onComplete }) => {
         </>
       )}
       
-      {paymentMethod === 'card' && (
+      {paymentMethod === 'tarjeta' && (
         <Box sx={{ mb: 4, p: 3, border: '1px dashed', borderColor: 'divider', borderRadius: 1 }}>
           <Typography variant="body1" align="center">
             Por favor, pase la tarjeta por el lector o inserte el chip
@@ -186,7 +216,7 @@ const Payment = ({ open, onClose, total, onComplete }) => {
         </Box>
       )}
       
-      {paymentMethod === 'transfer' && (
+      {paymentMethod === 'transferencia' && (
         <Box sx={{ mb: 4, p: 3, border: '1px dashed', borderColor: 'divider', borderRadius: 1 }}>
           <Typography variant="body1" align="center">
             Por favor, realice la transferencia al siguiente número de cuenta:

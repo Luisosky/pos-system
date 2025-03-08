@@ -1,10 +1,21 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
+  // Reference of the cashier
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  // Reference to the customer
+  customer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Customer'
+  },
+  // Default customer name if not registered
+  customerName: {
+    type: String,
+    default: 'Anónimo'
   },
   products: [{
     product: {
@@ -15,10 +26,19 @@ const orderSchema = new mongoose.Schema({
     quantity: {
       type: Number,
       required: true
+    },
+    price: {
+      type: Number,
+      required: true
     }
   }],
   totalAmount: {
     type: Number,
+    required: true
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['efectivo', 'tarjeta', 'transferencia'],
     required: true
   },
   orderDate: {
@@ -28,7 +48,7 @@ const orderSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['pending', 'completed', 'canceled'],
-    default: 'pending'
+    default: 'completed'
   }
 });
 
