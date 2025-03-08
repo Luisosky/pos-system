@@ -1,11 +1,12 @@
 const User = require('../../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const config = require('../config/config');
 const { hashPassword, comparePassword } = require('../utils/helpers');
 
 // Register a new user
 exports.register = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
 
   try {
     // Check if user already exists
@@ -20,14 +21,12 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Hash the password with username for added security
-    const hashedPassword = await hashPassword(password, username);
-
     // Create a new user
     const newUser = new User({
       username,
       ...(email && { email }),
-      password: hashedPassword,
+      password: password, // The password will be hashed before saving
+      role: role || 'cashier'
     });
 
     await newUser.save();
@@ -39,42 +38,42 @@ exports.register = async (req, res) => {
 
 // Login a user
 exports.login = async (req, res) => {
-  const { username, email, password } = req.body;
-
   try {
-    // Check if user exists by username or email
-    const user = await User.findOne(
-      email ? { email } : { username }
-    );
+    const { username, password } = req.body;
+    
+    // Find user by username
+    const user = await User.findOne({ username });
     
     if (!user) {
-      // Add console.log for debugging
-      console.log(`Usuario no encontrado: ${username}`);
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Credenciales inválidas' });
     }
-
-    // Check password using bcrypt comparison
-    const isMatch = await bcrypt.compare(password, user.password);
-    // Add console.log for debugging
-    console.log(`Verificación de contraseña para ${username}: ${isMatch}`);
+    
+    // Important! Use the username to hash the password
+    const isMatch = await user.comparePassword(password);
+    
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Credenciales inválidas' });
     }
-
-    // Create and assign a token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    // Add console.log for debugging
-    res.status(200).json({ 
-      token, 
-      user: { 
-        id: user._id, 
-        username: user.username, 
-        role: user.role,  // Add role to the response
-        ...(user.email && { email: user.email }) 
-      } 
+    
+    // Create a token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      config.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        email: user.email
+      }
     });
+    
   } catch (error) {
-    console.error('Error de autenticación:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error de login:', error);
+    res.status(500).json({ message: 'Error del servidor' });
   }
 };

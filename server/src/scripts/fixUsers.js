@@ -1,8 +1,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const mongoose = require('mongoose');
-const User = require('../../models/User');
-const bcrypt = require('bcrypt');
+const User = require('../models/User');
 
 async function fixUsers() {
   try {
@@ -10,35 +9,33 @@ async function fixUsers() {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connection successful!');
     
-    // Delete all previous users
+    // Delete all users to start from scratch
     await User.deleteMany({});
     console.log('Usuarios anteriores eliminados');
     
-    // Create admin with hashed password
-    const adminPassword = await bcrypt.hash('admin123', 10);
-    
-    await User.create({
+    // Create admin using the model that handles
+    const admin = new User({
       username: 'admin',
       email: 'admin@pos-system.com',
-      password: adminPassword,
+      password: 'admin123', // It will hash in the pre-save
       role: 'admin'
     });
     
+    await admin.save();
     console.log('Admin creado correctamente');
     
-    // Cashier with simple hashed password
-    const cashierPassword = await bcrypt.hash('cajero123', 10);
-    
-    await User.create({
+    // Create cashier using the model that handles
+    const cajero = new User({
       username: 'cajero',
       email: 'cajero@pos-system.com',
-      password: cashierPassword,
+      password: 'cajero123', // It will hash in the pre-save
       role: 'cashier'
     });
     
+    await cajero.save();
     console.log('Cajero creado correctamente');
     
-    // Verify users
+    // Verify that the users were created with rols
     const users = await User.find({}, { password: 0 });
     console.log('Usuarios recreados:', users);
     
