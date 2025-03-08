@@ -8,12 +8,25 @@ const authService = {
   },
   
   login: async (credentials) => {
-    const response = await api.post('/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+    try {
+      console.log('Enviando credenciales al servidor:', {
+        username: credentials.username,
+        passwordLength: credentials.password?.length || 0
+      });
+      
+      const response = await api.post('/auth/login', credentials);
+      console.log('Respuesta del servidor:', response.data);
+      
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error en login:', error.response?.data || error.message);
+      throw error;
     }
-    return response.data;
   },
   
   logout: () => {

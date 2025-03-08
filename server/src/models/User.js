@@ -17,12 +17,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  role: {
-    type: String,
-    enum: ['admin', 'cashier'],
-    default: 'cashier',
-    required: true
-  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -39,11 +33,18 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Method to compare password for authentication
-userSchema.methods.comparePassword = async function (password) {
-  // Include the username in the password hash for comparison
-  const combinedPassword = `${this.username}:${password}`;
-  return await bcrypt.compare(combinedPassword, this.password);
+// Simplify the password comparison for debug
+userSchema.methods.comparePassword = async function(password) {
+  try {
+    const combinedPassword = `${this.username}:${password}`;
+    console.log('Combined password for comparison:', combinedPassword);
+    const result = await bcrypt.compare(combinedPassword, this.password);
+    console.log('bcrypt compare result:', result);
+    return result;
+  } catch (error) {
+    console.error('Error comparing password:', error);
+    return false;
+  }
 };
 
 const User = mongoose.model('User', userSchema);

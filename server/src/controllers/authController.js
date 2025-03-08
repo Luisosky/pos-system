@@ -40,19 +40,30 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log('Login attempt:', { username });
     
     // Find user by username
     const user = await User.findOne({ username });
+    console.log('User found:', user ? 'Yes' : 'No');
     
     if (!user) {
-      return res.status(401).json({ message: 'Credenciales inválidas' });
+      return res.status(401).json({ message: 'Credenciales inválidas (usuario no encontrado)' });
     }
     
+    console.log('User data:', {
+      id: user._id,
+      username: user.username,
+      role: user.role,
+      hasPassword: !!user.password
+    });
+    
     // Important! Use the username to hash the password
+    console.log('Comparing password...');
     const isMatch = await user.comparePassword(password);
+    console.log('Password match:', isMatch);
     
     if (!isMatch) {
-      return res.status(401).json({ message: 'Credenciales inválidas' });
+      return res.status(401).json({ message: 'Credenciales inválidas (contraseña incorrecta)' });
     }
     
     // Create a token
@@ -73,7 +84,7 @@ exports.login = async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error de login:', error);
-    res.status(500).json({ message: 'Error del servidor' });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Error del servidor: ' + error.message });
   }
 };
