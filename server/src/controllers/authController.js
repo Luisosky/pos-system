@@ -71,11 +71,11 @@ exports.login = async (req, res) => {
     logger.info(`Login exitoso: ${username}, Rol: ${user.role}`);
     
     res.status(200).json({
-      token,
+      token, // JWT token
       user: {
         id: user._id,
         username: user.username,
-        role: user.role
+        role: user.role || 'cashier' // With fallback
       }
     });
     

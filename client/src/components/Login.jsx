@@ -186,6 +186,27 @@ const Login = ({ onLogin }) => {
         
         {/* DemoCredentials */}
         <DemoCredentials />
+
+        {/* Diagnostic Button - Add in Login.jsx before closing the Paper */}
+        <Box sx={{ mt: 2 }}>
+          <Button 
+            onClick={async () => {
+              const { testLoginDirectly } = await import('../services/testAuthService');
+              const result = await testLoginDirectly();
+              
+              if (result.success) {
+                setError('Prueba exitosa. Revisa la consola para detalles');
+              } else {
+                setError('Prueba fallida. Revisa la consola para detalles');
+              }
+            }}
+            fullWidth
+            variant="outlined"
+            color="secondary"
+          >
+            Diagnosticar Login
+          </Button>
+        </Box>
       </Paper>
     </Box>
   );
