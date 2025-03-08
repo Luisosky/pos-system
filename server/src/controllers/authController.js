@@ -68,7 +68,10 @@ exports.login = async (req, res) => {
     
     // Create a token
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { 
+        id: user._id, 
+        role: user.role || 'cashier' 
+      },
       config.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -78,8 +81,8 @@ exports.login = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        role: user.role,
-        email: user.email
+        role: user.role || 'cashier', 
+        ...(user.email && { email: user.email })
       }
     });
     
