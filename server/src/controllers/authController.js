@@ -53,8 +53,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Check password using username in comparison
-    const isMatch = await comparePassword(password, user.password, user.username);
+    // Check password using bcrypt comparison
+    const isMatch = await bcrypt.compare(password, user.password);
     // Add console.log for debugging
     console.log(`Verificación de contraseña para ${username}: ${isMatch}`);
     if (!isMatch) {
@@ -63,11 +63,13 @@ exports.login = async (req, res) => {
 
     // Create and assign a token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Add console.log for debugging
     res.status(200).json({ 
       token, 
       user: { 
         id: user._id, 
         username: user.username, 
+        role: user.role,  // Add role to the response
         ...(user.email && { email: user.email }) 
       } 
     });
