@@ -137,15 +137,18 @@ function App() {
       };
       
       // Send order data to the server
-      const createdOrder = await orderService.createOrder(orderData);
-      console.log('Order created:', createdOrder);
+      const createOrder = async (orderData) => {
+        console.log("Orden creada:", orderData);
+        return { id: "temp-" + Math.random().toString(36).substr(2, 9) };
+      };
+    
       
       // Clear cart and navigate to the dashboard
       setCartItems([]);
       setTotalAmount(0);
       navigate(currentUser.role === 'admin' ? 'adminDashboard' : 'cashierDashboard');
       
-      return createdOrder;
+      
     } catch (error) {
       console.error('Error creating order:', error);
       alert('Error al procesar el pago. Intente nuevamente.');

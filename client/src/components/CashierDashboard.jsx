@@ -20,7 +20,7 @@ import {
   Warning
 } from '@mui/icons-material';
 import Navbar from './Navbar';
-import { orderService, notificationService } from '../services';
+//import { orderService, notificationService } from '../services';
 
 const CashierDashboard = ({ username, onNavigate }) => {
   const [dashboardData, setDashboardData] = useState({
@@ -39,18 +39,18 @@ const CashierDashboard = ({ username, onNavigate }) => {
         setLoading(true);
         
         // Get daily sales summary
-        const salesData = await orderService.getDailySummary();
+        //const salesData = await orderService.getDailySummary();
         
         // Get notifications 
-        const notifications = await notificationService.getNotifications();
+        //const notifications = await notificationService.getNotifications();
         
         setDashboardData({
           sales: {
-            total: salesData.totalSales || 0,
-            ticketsCount: salesData.orderCount || 0,
-            frequentCustomer: salesData.frequentCustomerPercentage || 0
+            //total: salesData.totalSales || 0,
+            //ticketsCount: salesData.orderCount || 0,
+            //frequentCustomer: salesData.frequentCustomerPercentage || 0
           },
-          notifications: notifications || []
+          //notifications: notifications || []
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);

@@ -1,8 +1,15 @@
-// Export all services from here
-export { default as api } from './api';
-export { default as authService } from './authService';
-export { default as productService } from './productService';
-export { default as orderService } from './orderService';
-export { default as userService } from './userService';
-export { default as customerService } from './customerService';
-export { default as notificationService } from './notificationService';
+import api from './api';
+import authService from './authService';
+import userService from './userService';
+import productService from './productService';
+import orderService from './orderService';
+import notificationService from './notificationService';
+
+export {
+  api,
+  authService,
+  userService,
+  productService,
+  orderService,
+  notificationService
+};

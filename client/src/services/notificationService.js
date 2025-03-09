@@ -1,30 +1,16 @@
-import api from './api';
+import { api } from './api';
 
 const notificationService = {
- 
   getNotifications: async () => {
-    const response = await api.get('/notifications');
-    return response.data;
-  },
- 
-  markAsRead: async (notificationId) => {
-    const response = await api.put(`/notifications/${notificationId}/read`);
-    return response.data;
-  },
+    // Datos de ejemplo para desarrollo
+    return [
+      { id: 1, type: 'success', message: 'Actualización de inventario completada' },
+      { id: 2, type: 'warning', message: 'Stock bajo de "Leche" (5 unidades)' },
+    ];
+    
 
-  markAllAsRead: async () => {
-    const response = await api.put('/notifications/read-all');
-    return response.data;
-  },
-
-  deleteNotification: async (notificationId) => {
-    const response = await api.delete(`/notifications/${notificationId}`);
-    return response.data;
-  },
-
-  getUnreadNotifications: async () => {
-    const response = await api.get('/notifications/unread');
-    return response.data;
+    // const response = await api.get('/notifications');
+    // return response.data;
   }
 };
 

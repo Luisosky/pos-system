@@ -33,7 +33,7 @@ import {
   Add
 } from '@mui/icons-material';
 import Navbar from './Navbar';
-import { productService, orderService } from '../services';
+//import { productService, orderService } from '../services';
 
 const POS = ({ username }) => {
   const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -50,12 +50,12 @@ const POS = ({ username }) => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const data = await productService.getAllProducts();
-        setProducts(data);
+        //const data = await productService.getAllProducts();
+        //setProducts(data);
         
         // Get unique categories from products
-        const uniqueCategories = ['Todos', ...new Set(data.map(item => item.category))];
-        setCategories(uniqueCategories);
+        //const uniqueCategories = ['Todos', ...new Set(data.map(item => item.category))];
+        //setCategories(uniqueCategories);
       } catch (err) {
         console.error('Error fetching products:', err);
         setError('No se pudieron cargar los productos');
@@ -138,11 +138,11 @@ const POS = ({ username }) => {
         cashierName: username
       };
       
-      const createdOrder = await orderService.createOrder(orderData);
+      //const createdOrder = await orderService.createOrder(orderData);
       // Clear cart after successful order creation
       setCart([]);
       
-      return createdOrder;
+      //return createdOrder;
     } catch (err) {
       console.error('Error creating order:', err);
       throw err; // Send error to the caller
