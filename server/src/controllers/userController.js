@@ -74,6 +74,3 @@ exports.getAllUsers = async (req, res, next) => {
     next(error);
   }
 };
-
-
-module.exports = userController;

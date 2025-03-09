@@ -73,6 +73,39 @@ const productService = {
       console.error('Error al obtener producto por ID:', error);
       throw error;
     }
+  },
+  
+  // Método para crear un producto
+  createProduct: async (productData) => {
+    try {
+      const response = await api.post('/products', productData);
+      return response.data;
+    } catch (error) {
+      console.error('Error al crear producto:', error);
+      throw error;
+    }
+  },
+  
+  // Método para actualizar un producto
+  updateProduct: async (id, productData) => {
+    try {
+      const response = await api.put(`/products/${id}`, productData);
+      return response.data;
+    } catch (error) {
+      console.error('Error al actualizar producto:', error);
+      throw error;
+    }
+  },
+  
+  // Método para eliminar un producto
+  deleteProduct: async (id) => {
+    try {
+      const response = await api.delete(`/products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+      throw error;
+    }
   }
 };
 
