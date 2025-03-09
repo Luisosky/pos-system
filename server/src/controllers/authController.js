@@ -37,15 +37,35 @@ exports.register = async (req, res, next) => {
 // Login
 exports.login = async (req, res, next) => {
   try {
+    // Mostrar el cuerpo completo para diagnóstico
+    console.log('Cuerpo completo de solicitud login:', JSON.stringify(req.body));
+    
     const { username, password } = req.body;
     
-    // Validar que username es un string
-    if (typeof username !== 'string' || typeof password !== 'string') {
-      logger.warn(`Intento de login con formato incorrecto: ${JSON.stringify(req.body)}`);
-      return res.status(400).json({ message: 'Formato de credenciales inválido' });
+    // Validación de campos
+    if (!username || !password) {
+      console.error('Campos incompletos:', { username: !!username, password: !!password });
+      return res.status(400).json({ 
+        message: 'Por favor proporcione nombre de usuario y contraseña',
+        details: { 
+          usernameProvided: !!username, 
+          passwordProvided: !!password 
+        }
+      });
     }
     
-    logger.info(`Intento de login: ${username}, con contraseña: ${password.substring(0, 1)}*** (longitud: ${password.length})`);
+    // Validar que username y password son strings
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      console.error('Tipo incorrecto:', { 
+        usernameType: typeof username, 
+        passwordType: typeof password 
+      });
+      return res.status(400).json({ 
+        message: 'Formato de credenciales inválido' 
+      });
+    }
+    
+    logger.info(`Intento de login: ${username}`);
     
     // Buscar usuario
     const user = await User.findOne({ username });

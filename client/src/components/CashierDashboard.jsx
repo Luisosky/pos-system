@@ -22,7 +22,14 @@ import {
 import Navbar from './Navbar';
 //import { orderService, notificationService } from '../services';
 
-const CashierDashboard = ({ username, onNavigate }) => {
+const CashierDashboard = ({ 
+  username = '', 
+  onNavigate, 
+  onLogout,
+  dailySales = [],
+  dailyTotal = 0,
+  monthlySales = {},
+}) => {
   const [dashboardData, setDashboardData] = useState({
     sales: {
       total: 0,
@@ -83,6 +90,13 @@ const CashierDashboard = ({ username, onNavigate }) => {
       return "BUENAS NOCHES";
     }
   };
+
+  const formattedDailyTotal = typeof dailyTotal === 'number' ? 
+    dailyTotal.toFixed(2) : '0.00';
+  
+  const safeDailySales = Array.isArray(dailySales) ? dailySales : [];
+  const safeMonthlySales = monthlySales && typeof monthlySales === 'object' ? 
+    monthlySales : {};
 
   return (
     <Box sx={{ flexGrow: 1 }}>

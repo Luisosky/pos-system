@@ -30,12 +30,43 @@ const Login = ({ onLogin }) => {
   const DemoCredentials = () => {
     if (!isDemoMode) return null;
     
+    const setDemoCredentials = (type) => {
+      if (type === 'admin') {
+        setCredentials({
+          username: 'admin',
+          password: 'admin123'
+        });
+      } else if (type === 'cashier') {
+        setCredentials({
+          username: 'cajero',
+          password: 'cajero123'
+        });
+      }
+    };
+    
     return (
       <Box sx={{ mt: 2, p: 2, border: '1px dashed grey', borderRadius: 1 }}>
-        <Typography variant="subtitle2" color="textSecondary">
+        <Typography variant="subtitle2" color="textSecondary" gutterBottom>
           Credenciales de demostración:
         </Typography>
-        <Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button 
+            onClick={() => setDemoCredentials('admin')} 
+            size="small" 
+            variant="outlined"
+            sx={{ mr: 1 }}
+          >
+            Use Admin
+          </Button>
+          <Button 
+            onClick={() => setDemoCredentials('cashier')} 
+            size="small" 
+            variant="outlined"
+          >
+            Use Cajero
+          </Button>
+        </Box>
+        <Box sx={{ mt: 1, fontSize: '0.8rem' }}>
           <Typography variant="body2">
             Admin: admin / admin123
           </Typography>
@@ -59,36 +90,65 @@ const Login = ({ onLogin }) => {
     setShowPassword(!showPassword);
   };
 
-  // Al manejar el envío del formulario
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  // Modificar solo la función handleSubmit
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+  
+  try {
+    // Asegurar de que las credenciales sean strings
+    const cleanUsername = credentials.username.trim();
+    const cleanPassword = credentials.password.trim();
     
-    try {
-      // Simplificar el objeto de credenciales
-      const cleanUsername = credentials.username.trim();
-      const cleanPassword = credentials.password.trim();
-      
-      console.log(`Intentando login con: ${cleanUsername} / ${cleanPassword}`);
-      
-      const data = await authService.login({
-        username: cleanUsername,
-        password: cleanPassword
-      });
-      
-      console.log('Respuesta del servidor:', data);
-      onLogin(data.user);
-    } catch (error) {
-      console.error('Error de inicio de sesión:', error);
-      setError(
-        error.response?.data?.message || 
-        'Error al iniciar sesión. Por favor, intente nuevamente.'
-      );
-    } finally {
-      setLoading(false);
+    // Para depuración 
+    console.log(`Intentando login con:`);
+    console.log(`- Username: "${cleanUsername}"`);
+    console.log(`- Password: "${cleanPassword}" (longitud: ${cleanPassword.length})`);
+    
+    const response = await authService.login({
+      username: cleanUsername,
+      password: cleanPassword
+    });
+    
+    console.log('Respuesta del servidor:', response);
+    
+    if (!response || !response.token || !response.user) {
+      throw new Error('Respuesta inválida del servidor');
     }
-  };
+    
+    // Llamar a onLogin con los datos del usuario
+    const userData = response.user;
+    
+    // Verificar que la respuesta tiene el formato esperado
+    console.log('Datos de usuario recibidos:', userData);
+    
+    // Solo continuar si tenemos los datos necesarios
+    if (!userData || !userData.role) {
+      throw new Error('Datos de usuario incompletos');
+    }
+    
+    // Guardar vista según el rol
+    if (userData.role === 'admin') {
+      localStorage.setItem('currentView', 'adminDashboard');
+    } else if (userData.role === 'cashier') {
+      localStorage.setItem('currentView', 'cashierDashboard');
+    }
+    
+    // Llamar a onLogin
+    onLogin(userData);
+    
+  } catch (error) {
+    console.error('Error de inicio de sesión:', error);
+    setError(
+      error.response?.data?.message || error.message || 
+      'Error al iniciar sesión. Por favor, intente nuevamente.'
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Box 
@@ -214,13 +274,16 @@ const Login = ({ onLogin }) => {
                 setDiagnosticResult({status: 'loading', message: 'Ejecutando diagnóstico...'});
                 
                 // URL del backend
-                const backendUrl = 'http://localhost:5000/api/auth/login';
+                const backendUrl = 'http://localhost:5000/api/auth/login'; // URL correcta
                 
-                // Credenciales de prueba
+                // Credenciales de prueba 
                 const testData = {
                   username: 'admin',
-                  password: 'admin123'
+                  password: 'admin123'  // Debe coincidir con la contraseña actualizada en la base de datos
                 };
+                
+                console.log('Diagnóstico: Intentando conexión con credenciales de prueba:');
+                console.log(testData);
                 
                 // Intentar la conexión directamente
                 const response = await fetch(backendUrl, {
@@ -234,13 +297,18 @@ const Login = ({ onLogin }) => {
                 // Convertir la respuesta a JSON
                 const data = await response.json();
                 
+                // Verificar estructura de respuesta
+                const isValidResponse = data && data.token && data.user;
+                
                 // Mostrar resultado detallado en UI
                 setDiagnosticResult({
-                  status: response.ok ? 'success' : 'error',
+                  status: response.ok && isValidResponse ? 'success' : 'error',
                   statusCode: response.status,
                   data: data,
-                  message: response.ok 
-                    ? 'Conexión exitosa con el servidor' 
+                  message: response.ok && isValidResponse
+                    ? 'Conexión exitosa con el servidor y formato de respuesta correcto' 
+                    : response.ok 
+                    ? 'Conexión exitosa pero formato de respuesta incorrecto'
                     : `Error: ${data.message || 'Desconocido'}`
                 });
                 

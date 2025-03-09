@@ -9,28 +9,53 @@ const authService = {
     return response.data;
   },
   
-  // Método de login
+  // Una alternativa usando fetch directamente para el login
   login: async (credentials) => {
     try {
-      console.log('Enviando credenciales al servidor:', {
-        username: credentials.username,
-        passwordLength: credentials.password.length
+      const username = credentials.username?.trim();
+      const password = credentials.password?.trim();
+      
+      if (!username || !password) {
+        throw new Error('Credenciales incompletas');
+      }
+      
+      console.log('AuthService: Usando fetch directamente para login');
+      
+      // Usar fetch en lugar de axios para probar
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username,
+          password
+        })
       });
       
-      const response = await api.post('/auth/login', {
-        username: String(credentials.username),
-        password: String(credentials.password)
-      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error en respuesta:', errorData);
+        throw new Error(errorData.message || 'Error de autenticación');
+      }
       
-      console.log('Respuesta recibida:', response.data);
+      const data = await response.json();
       
-      // Guardar el token y la información del usuario en localStorage
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Guardar token y datos del usuario
+      const { token, user } = data;
       
-      return response.data;
+      if (!token || !user) {
+        throw new Error('Respuesta de servidor inválida');
+      }
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      console.log('AuthService: Login exitoso con fetch, datos guardados');
+      
+      return data;
     } catch (error) {
-      console.error('Error en authService.login:', error.response?.data || error.message);
+      console.error('AuthService Error (fetch):', error);
       throw error;
     }
   },
