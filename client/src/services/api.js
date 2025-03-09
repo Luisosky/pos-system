@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+// En tu archivo api.js o donde configuras tus llamadas a la API
+const API_URL = process.env.NODE_ENV === 'production'
+  ? '/api'  // En producción, usa rutas relativas
+  : 'http://localhost:5000/api'; // En desarrollo, apunta a tu servidor Express
+
 // Get the API URL from the environment variables
-const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const baseURL = process.env.REACT_APP_API_URL || API_URL;
 
 const api = axios.create({
   baseURL,

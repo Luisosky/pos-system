@@ -34,43 +34,59 @@ exports.register = async (req, res, next) => {
   }
 };
 
-// Login of user
+// Login
 exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    logger.info(`Intento de login: ${username}`);
     
-    // Find user
-    const user = await User.findOne({ username });
-    
-    if (!user) {
-      logger.warn(`Intento de login fallido: usuario no encontrado - ${username}`);
-      return res.status(401).json({ message: 'Credenciales inválidas' });
+    // Validar que username es un string
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      logger.warn(`Intento de login con formato incorrecto: ${JSON.stringify(req.body)}`);
+      return res.status(400).json({ message: 'Formato de credenciales inválido' });
     }
     
-    // Verify password
-    const isMatch = await user.comparePassword(password);
+    logger.info(`Intento de login: ${username}, con contraseña: ${password.substring(0, 1)}*** (longitud: ${password.length})`);
+    
+    // Buscar usuario
+    const user = await User.findOne({ username });
+    if (!user) {
+      logger.warn(`Usuario no encontrado: ${username}`);
+      return res.status(400).json({ message: 'Credenciales inválidas' });
+    }
+    
+    logger.info(`Usuario encontrado: ${user.username}, hash: ${user.password.substring(0, 10)}...`);
+    
+    // Verificar contraseña
+    const isMatch = await bcrypt.compare(password, user.password);
+    logger.info(`Resultado de la comparación: ${isMatch}`);
     
     if (!isMatch) {
-      logger.warn(`Intento de login fallido: contraseña incorrecta - ${username}`);
-      return res.status(401).json({ message: 'Credenciales inválidas' });
+      logger.warn(`Contraseña incorrecta para usuario: ${username}`);
+      return res.status(400).json({ message: 'Credenciales inválidas' });
     }
     
-    // Create token
+    // Crear token
+    const payload = {
+      id: user._id,
+      username: user.username,
+      role: user.role
+    };
+    
     const token = jwt.sign(
-      { id: user._id, role: user.role || 'cashier' },
-      process.env.JWT_SECRET || 'your_jwt_secret',
+      payload, 
+      process.env.JWT_SECRET || 'your_jwt_secret', 
       { expiresIn: '24h' }
     );
     
-    logger.info(`Login exitoso: ${username}, Rol: ${user.role}`);
+    logger.info(`Login exitoso: ${username}`);
     
-    res.status(200).json({
+    res.json({
+      message: 'Login exitoso',
       token,
       user: {
         id: user._id,
         username: user.username,
-        role: user.role || 'cashier'
+        role: user.role
       }
     });
     
@@ -78,4 +94,16 @@ exports.login = async (req, res, next) => {
     logger.error(`Error en login: ${error.message}`);
     next(error);
   }
+};
+
+// Validar token
+exports.validateToken = async (req, res) => {
+  // Si el middleware de autenticación permitió llegar hasta aquí, el token es válido
+  res.status(200).json({ 
+    valid: true, 
+    user: {
+      id: req.user.id,
+      role: req.user.role
+    } 
+  });
 };

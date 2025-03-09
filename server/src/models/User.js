@@ -11,14 +11,13 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: false, 
-    sparse: true,    
-    unique: true,    
-    trim: true
+    trim: true,
+    lowercase: true,
+    match: [/^\S+@\S+\.\S+$/, 'Por favor ingrese un correo electrónico válido']
   },
   password: {
     type: String,
-    required: true,
+    required: true
   },
   role: {
     type: String,
@@ -28,36 +27,33 @@ const userSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-  },
+    default: Date.now
+  }
 });
 
-// Hash the password before saving the user
-userSchema.pre('save', async function (next) {
+// Pre-save hook para hashear la contraseña
+userSchema.pre('save', async function(next) {
+  // Solo hashea la contraseña si ha sido modificada (o es nueva)
   if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(10);
-  // Include the username in the password hash
-  const combinedPassword = `${this.username}:${this.password}`;
-  this.password = await bcrypt.hash(combinedPassword, salt);
-  next();
+  
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
-// Simplify the password comparison for debug
-userSchema.methods.comparePassword = async function(password) {
+// Método para comparar contraseñas
+userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
-    const combinedPassword = `${this.username}:${password}`;
-    logger.info(`Comparando contraseña para ${this.username} (combinada)`);
-    const result = await bcrypt.compare(combinedPassword, this.password);
-    logger.info(`Resultado de comparación para ${this.username}: ${result}`);
-    return result;
+    return await bcrypt.compare(candidatePassword, this.password);
   } catch (error) {
-    logger.error(`Error comparando contraseña: ${error.message}`, {
-      user: this.username,
-      stack: error.stack
-    });
-    return false;
+    throw error;
   }
 };
 
 const User = mongoose.model('User', userSchema);
+
 module.exports = User;

@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material';
 import Navbar from './Navbar';
 
-const AdminDashboard = ({ username, onNavigate }) => {
+const AdminDashboard = ({ username, onLogout, onNavigate }) => {
   const currentDate = new Date().toLocaleString('es-ES', {
     weekday: 'long',
     year: 'numeric',
@@ -60,8 +60,13 @@ const AdminDashboard = ({ username, onNavigate }) => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Navbar title="PANEL ADMINISTRACIÓN" username={username} userRole="Admin" />
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Navbar 
+        title="Panel de Administración" 
+        username={username} 
+        userRole="admin" 
+        onLogout={onLogout} 
+      />
       
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Grid container spacing={3}>

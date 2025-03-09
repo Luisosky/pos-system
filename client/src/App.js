@@ -24,6 +24,7 @@ function App() {
     username: '',
     role: '' // 'admin' o 'cashier'
   });
+  const [loading, setLoading] = useState(true);
   
   // Navigation state
   const [currentScreen, setCurrentScreen] = useState('login');

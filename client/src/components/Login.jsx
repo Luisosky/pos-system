@@ -59,39 +59,32 @@ const Login = ({ onLogin }) => {
     setShowPassword(!showPassword);
   };
 
+  // Al manejar el envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: credentials.username,
-          password: credentials.password
-        })
+      // Simplificar el objeto de credenciales
+      const cleanUsername = credentials.username.trim();
+      const cleanPassword = credentials.password.trim();
+      
+      console.log(`Intentando login con: ${cleanUsername} / ${cleanPassword}`);
+      
+      const data = await authService.login({
+        username: cleanUsername,
+        password: cleanPassword
       });
       
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al iniciar sesión');
-      }
-      
-      // Guardar token y datos de usuario
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      // Llamar a la función de login desde las props
+      console.log('Respuesta del servidor:', data);
       onLogin(data.user);
-      
-    } catch (err) {
-      console.error('Error en login:', err);
-      setError(err.message || 'Error al iniciar sesión');
+    } catch (error) {
+      console.error('Error de inicio de sesión:', error);
+      setError(
+        error.response?.data?.message || 
+        'Error al iniciar sesión. Por favor, intente nuevamente.'
+      );
     } finally {
       setLoading(false);
     }

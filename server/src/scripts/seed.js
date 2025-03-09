@@ -1,48 +1,48 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const User = require('../models/User');
 const logger = require('../utils/logger');
 
-async function seedDatabase() {
+async function seedUsers() {
   try {
-    logger.info('Connecting to MongoDB...');
+    logger.info('Conectando a MongoDB...');
     await mongoose.connect(process.env.MONGODB_URI);
-    logger.info('Connection successful!');
+    logger.info('Conexión exitosa!');
     
-    // Delete previous users
+    // Eliminar usuarios existentes
     await User.deleteMany({});
-    logger.info('Previous users deleted');
+    logger.info('Usuarios anteriores eliminados');
     
-    // Create admin user (with email)
+    // Crear usuario administrador (sin mezclar con el username)
+    const adminPassword = await bcrypt.hash('admin123', 10);
     const admin = new User({
       username: 'admin',
-      email: 'admin@pos-system.com', 
-      password: 'admin123',
+      password: adminPassword,
       role: 'admin'
     });
-    
     await admin.save();
-    logger.info('Admin user created');
+    logger.info('Usuario administrador creado');
     
-    // Create cashier user (without email)
+    // Crear usuario cajero
+    const cashierPassword = await bcrypt.hash('cajero123', 10);
     const cashier = new User({
       username: 'cajero',
-      password: 'cajero123',
+      password: cashierPassword,
       role: 'cashier'
     });
-    
     await cashier.save();
-    logger.info('Cashier user created');
+    logger.info('Usuario cajero creado');
     
-    logger.info('Database seeded successfully');
+    logger.info('Usuarios iniciales creados correctamente');
     
   } catch (error) {
-    logger.error(`Error seeding database: ${error.message}`);
+    logger.error(`Error al crear usuarios iniciales: ${error.message}`);
   } finally {
     await mongoose.disconnect();
-    logger.info('Disconnected from MongoDB');
+    logger.info('Desconectado de MongoDB');
   }
 }
 
-seedDatabase();
+seedUsers();

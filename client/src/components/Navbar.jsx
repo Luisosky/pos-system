@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavigationContext } from '../App';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, Logout as LogoutIcon } from '@mui/icons-material';
 import { 
   AppBar, 
   Box, 
@@ -15,7 +15,7 @@ import {
 import { Search as SearchIcon, Notifications } from '@mui/icons-material';
 import LogoImage from '../assets/logo.png';
 
-const Navbar = ({ title, username, userRole }) => {
+const Navbar = ({ title, username, userRole, onLogout }) => {
   const { goBack, canGoBack } = useContext(NavigationContext);
   const currentDateTime = new Date().toLocaleString('es-ES', {
     year: 'numeric',
@@ -100,14 +100,24 @@ const Navbar = ({ title, username, userRole }) => {
           </IconButton>
         </Tooltip>
 
-        {/* User Avatar */}
-        <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+        {/* User Info and Logout - Unified Section */}
+        <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
           <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: 'primary.main' }}>
             {username?.charAt(0).toUpperCase()}
           </Avatar>
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            {userRole}
-          </Typography>
+          <Box sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', alignItems: 'start', mr: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 'medium', lineHeight: 1.2 }}>
+              {username}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1 }}>
+              {userRole}
+            </Typography>
+          </Box>
+          <Tooltip title="Cerrar sesión">
+            <IconButton color="inherit" onClick={onLogout} size="small">
+              <LogoutIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Toolbar>
     </AppBar>

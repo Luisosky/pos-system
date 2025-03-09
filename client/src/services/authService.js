@@ -9,29 +9,28 @@ const authService = {
     return response.data;
   },
   
+  // Método de login
   login: async (credentials) => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials)
+      console.log('Enviando credenciales al servidor:', {
+        username: credentials.username,
+        passwordLength: credentials.password.length
       });
       
-      const data = await response.json();
+      const response = await api.post('/auth/login', {
+        username: String(credentials.username),
+        password: String(credentials.password)
+      });
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al iniciar sesión');
-      }
+      console.log('Respuesta recibida:', response.data);
       
-      // Guardar token y datos de usuario
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Guardar el token y la información del usuario en localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       
-      return data;
+      return response.data;
     } catch (error) {
-      console.error('Error en login:', error);
+      console.error('Error en authService.login:', error.response?.data || error.message);
       throw error;
     }
   },
@@ -42,11 +41,46 @@ const authService = {
   },
   
   getCurrentUser: () => {
-    return JSON.parse(localStorage.getItem('user'));
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return null;
+      return JSON.parse(userStr);
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      return null;
+    }
   },
   
   isAuthenticated: () => {
     return !!localStorage.getItem('token');
+  },
+  
+  // Método para validar el token con el servidor
+  validateToken: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      
+      // Realizar una petición a una ruta protegida para validar el token
+      const response = await fetch(`${API_URL}/auth/validate-token`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Token inválido');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error validando token:', error);
+      // Si hay un error, eliminar datos de autenticación
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      throw error;
+    }
   }
 };
 
