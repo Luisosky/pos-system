@@ -1,57 +1,52 @@
-const User = require('../../models/User');
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const config = require('../config/config');
-const { hashPassword, comparePassword } = require('../utils/helpers');
-const logger = require('../utils/logger'); // Importar logger
+const logger = require('../utils/logger');
 
-// Register a new user
-exports.register = async (req, res) => {
-  const { username, email, password, role } = req.body;
 
+exports.register = async (req, res, next) => {
   try {
-    // Check if user already exists
-    const existingUser = await User.findOne({ 
-      $or: [
-        { username },
-        ...(email ? [{ email }] : [])
-      ] 
-    });
+    const { username, email, password, role } = req.body;
     
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+    // Verify if user exists
+    const userExists = await User.findOne({ username });
+    if (userExists) {
+      return res.status(400).json({ message: 'El usuario ya existe' });
     }
-
-    // Create a new user
-    const newUser = new User({
+    
+    // Create user (email is optional)
+    const user = new User({
       username,
-      ...(email && { email }),
-      password: password, // The password will be hashed before saving
+      ...(email && { email }), 
+      password, 
       role: role || 'cashier'
     });
-
-    await newUser.save();
-    res.status(201).json({ message: 'User registered successfully' });
+    
+    await user.save();
+    
+    logger.info(`Usuario registrado: ${username}`);
+    
+    res.status(201).json({ message: 'Usuario creado exitosamente' });
+    
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    logger.error(`Error en registro: ${error.message}`);
+    next(error);
   }
 };
 
-// Login a user
-exports.login = async (req, res) => {
+// Login of user
+exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
     logger.info(`Intento de login: ${username}`);
     
-    // Find user by username
+    // Find user
     const user = await User.findOne({ username });
     
     if (!user) {
       logger.warn(`Intento de login fallido: usuario no encontrado - ${username}`);
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
-    
-    logger.info(`Usuario encontrado: ${username}, ID: ${user._id}, Rol: ${user.role}`);
     
     // Verify password
     const isMatch = await user.comparePassword(password);
@@ -63,26 +58,24 @@ exports.login = async (req, res) => {
     
     // Create token
     const token = jwt.sign(
-      { id: user._id, role: user.role },
-      config.JWT_SECRET,
+      { id: user._id, role: user.role || 'cashier' },
+      process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '24h' }
     );
     
     logger.info(`Login exitoso: ${username}, Rol: ${user.role}`);
     
     res.status(200).json({
-      token, // JWT token
+      token,
       user: {
         id: user._id,
         username: user.username,
-        role: user.role || 'cashier' // With fallback
+        role: user.role || 'cashier'
       }
     });
     
   } catch (error) {
-    logger.error(`Error en autenticación: ${error.message}`, { 
-      stack: error.stack 
-    });
-    res.status(500).json({ message: 'Error del servidor' });
+    logger.error(`Error en login: ${error.message}`);
+    next(error);
   }
 };

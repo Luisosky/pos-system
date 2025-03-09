@@ -1,5 +1,6 @@
-const User = require('../../models/User');
+const User = require('../models/User');
 const { hashPassword } = require('../utils/helpers');
+const logger = require('../utils/logger');
 
 // Register a new user
 exports.registerUser = async (req, res) => {
@@ -45,3 +46,34 @@ exports.updateUser = async (req, res) => {
     res.status(500).json({ message: 'Error updating user', error });
   }
 };
+
+// Get user profile
+exports.getUserProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    res.json(user);
+    
+  } catch (error) {
+    logger.error(`Error obteniendo perfil: ${error.message}`);
+    next(error);
+  }
+};
+
+// Get all users
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (error) {
+    logger.error(`Error obteniendo usuarios: ${error.message}`);
+    next(error);
+  }
+};
+
+
+module.exports = userController;

@@ -7,12 +7,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true
   },
   email: {
     type: String,
-    required: true,
-    sparse: true, // Allow null values (optional email)
-    unique: true,
+    required: false, 
+    sparse: true,    
+    unique: true,    
+    trim: true
   },
   password: {
     type: String,
@@ -58,5 +60,4 @@ userSchema.methods.comparePassword = async function(password) {
 };
 
 const User = mongoose.model('User', userSchema);
-
 module.exports = User;

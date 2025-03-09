@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import logoImage from '../assets/logo.png';
+import authService from '../services/authService';
 
 const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +21,7 @@ const Login = ({ onLogin }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [diagnosticResult, setDiagnosticResult] = useState(null);
 
   // Verify if demo mode is enabled
   const isDemoMode = process.env.REACT_APP_DEMO_MODE === 'true';
@@ -63,13 +65,33 @@ const Login = ({ onLogin }) => {
     setError('');
     
     try {
-      const success = await onLogin(credentials.username, credentials.password);
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: credentials.username,
+          password: credentials.password
+        })
+      });
       
-      if (!success) {
-        setError('Credenciales inválidas');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al iniciar sesión');
       }
+      
+      // Guardar token y datos de usuario
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Llamar a la función de login desde las props
+      onLogin(data.user);
+      
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al iniciar sesión');
+      console.error('Error en login:', err);
+      setError(err.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
@@ -187,25 +209,105 @@ const Login = ({ onLogin }) => {
         {/* DemoCredentials */}
         <DemoCredentials />
 
-        {/* Diagnostic Button - Add in Login.jsx before closing the Paper */}
-        <Box sx={{ mt: 2 }}>
+        {/* Herramienta de diagnóstico mejorada */}
+        <Box sx={{ mt: 4, border: '1px dashed #ccc', p: 2, borderRadius: 1 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Herramienta de diagnóstico
+          </Typography>
+          
           <Button 
             onClick={async () => {
-              const { testLoginDirectly } = await import('../services/testAuthService');
-              const result = await testLoginDirectly();
-              
-              if (result.success) {
-                setError('Prueba exitosa. Revisa la consola para detalles');
-              } else {
-                setError('Prueba fallida. Revisa la consola para detalles');
+              try {
+                setDiagnosticResult({status: 'loading', message: 'Ejecutando diagnóstico...'});
+                
+                // URL del backend
+                const backendUrl = 'http://localhost:5000/api/auth/login';
+                
+                // Credenciales de prueba
+                const testData = {
+                  username: 'admin',
+                  password: 'admin123'
+                };
+                
+                // Intentar la conexión directamente
+                const response = await fetch(backendUrl, {
+                  method: 'POST', 
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(testData)
+                });
+                
+                // Convertir la respuesta a JSON
+                const data = await response.json();
+                
+                // Mostrar resultado detallado en UI
+                setDiagnosticResult({
+                  status: response.ok ? 'success' : 'error',
+                  statusCode: response.status,
+                  data: data,
+                  message: response.ok 
+                    ? 'Conexión exitosa con el servidor' 
+                    : `Error: ${data.message || 'Desconocido'}`
+                });
+                
+              } catch (error) {
+                // Capturar cualquier error en la conexión
+                setDiagnosticResult({
+                  status: 'error',
+                  message: `Error de conexión: ${error.message}`,
+                  error: error.toString()
+                });
               }
             }}
             fullWidth
             variant="outlined"
             color="secondary"
+            sx={{ mb: 1 }}
           >
-            Diagnosticar Login
+            Ejecutar diagnóstico
           </Button>
+          
+          {diagnosticResult && (
+            <Box sx={{ 
+              mt: 2, 
+              p: 2, 
+              bgcolor: diagnosticResult.status === 'success' ? '#e8f5e9' : 
+                       diagnosticResult.status === 'loading' ? '#e3f2fd' : 
+                       '#ffebee', 
+              borderRadius: 1 
+            }}>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                Estado: {diagnosticResult.status}
+                {diagnosticResult.statusCode && ` (${diagnosticResult.statusCode})`}
+              </Typography>
+              
+              <Typography variant="body2">
+                {diagnosticResult.message}
+              </Typography>
+              
+              {diagnosticResult.error && (
+                <Typography variant="body2" sx={{ mt: 1, fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                  {diagnosticResult.error}
+                </Typography>
+              )}
+              
+              {diagnosticResult.data && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="caption">Datos recibidos:</Typography>
+                  <pre style={{ 
+                    fontSize: '0.7rem', 
+                    overflowX: 'auto', 
+                    backgroundColor: '#f5f5f5',
+                    padding: 8,
+                    borderRadius: 4
+                  }}>
+                    {JSON.stringify(diagnosticResult.data, null, 2)}
+                  </pre>
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
       </Paper>
     </Box>

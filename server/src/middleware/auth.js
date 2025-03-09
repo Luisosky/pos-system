@@ -1,35 +1,23 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const logger = require('../utils/logger');
 
-const authMiddleware = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  
-  if (!token) {
-    return res.status(401).json({ message: 'Access denied. No token provided.' });
-  }
-
+module.exports = (req, res, next) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(400).json({ message: 'Invalid token.' });
-  }
-};
-
-const isAdmin = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ message: 'Access denied. Admins only.' });
+    // Get token
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ message: 'Acceso denegado. Token no proporcionado' });
     }
+    
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
+    req.user = decoded;
+    
     next();
+    
   } catch (error) {
-    res.status(500).json({ message: 'Server error.' });
+    logger.error(`Error de autenticación: ${error.message}`);
+    res.status(401).json({ message: 'Token inválido' });
   }
-};
-
-module.exports = {
-  authMiddleware,
-  isAdmin,
 };

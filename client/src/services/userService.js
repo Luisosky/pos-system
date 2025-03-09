@@ -12,6 +12,18 @@ const userService = {
     return response.data;
   },
   
+  createUser: async (userData) => {
+    const payload = {
+      username: userData.username,
+      password: userData.password,
+      role: userData.role || 'cashier',
+      ...(userData.email && { email: userData.email })
+    };
+    
+    const response = await api.post('/users', payload);
+    return response.data;
+  },
+  
   updateUser: async (id, userData) => {
     const response = await api.put(`/users/${id}`, userData);
     return response.data;
