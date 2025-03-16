@@ -90,7 +90,7 @@ const Login = ({ onLogin }) => {
     setShowPassword(!showPassword);
   };
 
-  // Modificar solo la función handleSubmit
+ 
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -98,11 +98,11 @@ const handleSubmit = async (e) => {
   setError('');
   
   try {
-    // Asegurar de que las credenciales sean strings
+   
     const cleanUsername = credentials.username.trim();
     const cleanPassword = credentials.password.trim();
     
-    // Para depuración 
+    
     console.log(`Intentando login con:`);
     console.log(`- Username: "${cleanUsername}"`);
     console.log(`- Password: "${cleanPassword}" (longitud: ${cleanPassword.length})`);
@@ -118,25 +118,25 @@ const handleSubmit = async (e) => {
       throw new Error('Respuesta inválida del servidor');
     }
     
-    // Llamar a onLogin con los datos del usuario
+    
     const userData = response.user;
     
-    // Verificar que la respuesta tiene el formato esperado
+    
     console.log('Datos de usuario recibidos:', userData);
     
-    // Solo continuar si tenemos los datos necesarios
+    
     if (!userData || !userData.role) {
       throw new Error('Datos de usuario incompletos');
     }
     
-    // Guardar vista según el rol
+   
     if (userData.role === 'admin') {
       localStorage.setItem('currentView', 'adminDashboard');
     } else if (userData.role === 'cashier') {
       localStorage.setItem('currentView', 'cashierDashboard');
     }
     
-    // Llamar a onLogin
+  
     onLogin(userData);
     
   } catch (error) {
@@ -257,118 +257,6 @@ const handleSubmit = async (e) => {
               ¿Olvidó su clave?
             </Link>
           </Box>
-        </Box>
-        
-        {/* DemoCredentials */}
-        <DemoCredentials />
-
-        {/* Herramienta de diagnóstico mejorada */}
-        <Box sx={{ mt: 4, border: '1px dashed #ccc', p: 2, borderRadius: 1 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Herramienta de diagnóstico
-          </Typography>
-          
-          <Button 
-            onClick={async () => {
-              try {
-                setDiagnosticResult({status: 'loading', message: 'Ejecutando diagnóstico...'});
-                
-                // URL del backend
-                const backendUrl = 'http://localhost:5000/api/auth/login'; // URL correcta
-                
-                // Credenciales de prueba 
-                const testData = {
-                  username: 'admin',
-                  password: 'admin123'  // Debe coincidir con la contraseña actualizada en la base de datos
-                };
-                
-                console.log('Diagnóstico: Intentando conexión con credenciales de prueba:');
-                console.log(testData);
-                
-                // Intentar la conexión directamente
-                const response = await fetch(backendUrl, {
-                  method: 'POST', 
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(testData)
-                });
-                
-                // Convertir la respuesta a JSON
-                const data = await response.json();
-                
-                // Verificar estructura de respuesta
-                const isValidResponse = data && data.token && data.user;
-                
-                // Mostrar resultado detallado en UI
-                setDiagnosticResult({
-                  status: response.ok && isValidResponse ? 'success' : 'error',
-                  statusCode: response.status,
-                  data: data,
-                  message: response.ok && isValidResponse
-                    ? 'Conexión exitosa con el servidor y formato de respuesta correcto' 
-                    : response.ok 
-                    ? 'Conexión exitosa pero formato de respuesta incorrecto'
-                    : `Error: ${data.message || 'Desconocido'}`
-                });
-                
-              } catch (error) {
-                // Capturar cualquier error en la conexión
-                setDiagnosticResult({
-                  status: 'error',
-                  message: `Error de conexión: ${error.message}`,
-                  error: error.toString()
-                });
-              }
-            }}
-            fullWidth
-            variant="outlined"
-            color="secondary"
-            sx={{ mb: 1 }}
-          >
-            Ejecutar diagnóstico
-          </Button>
-          
-          {diagnosticResult && (
-            <Box sx={{ 
-              mt: 2, 
-              p: 2, 
-              bgcolor: diagnosticResult.status === 'success' ? '#e8f5e9' : 
-                       diagnosticResult.status === 'loading' ? '#e3f2fd' : 
-                       '#ffebee', 
-              borderRadius: 1 
-            }}>
-              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                Estado: {diagnosticResult.status}
-                {diagnosticResult.statusCode && ` (${diagnosticResult.statusCode})`}
-              </Typography>
-              
-              <Typography variant="body2">
-                {diagnosticResult.message}
-              </Typography>
-              
-              {diagnosticResult.error && (
-                <Typography variant="body2" sx={{ mt: 1, fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                  {diagnosticResult.error}
-                </Typography>
-              )}
-              
-              {diagnosticResult.data && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="caption">Datos recibidos:</Typography>
-                  <pre style={{ 
-                    fontSize: '0.7rem', 
-                    overflowX: 'auto', 
-                    backgroundColor: '#f5f5f5',
-                    padding: 8,
-                    borderRadius: 4
-                  }}>
-                    {JSON.stringify(diagnosticResult.data, null, 2)}
-                  </pre>
-                </Box>
-              )}
-            </Box>
-          )}
         </Box>
       </Paper>
     </Box>
