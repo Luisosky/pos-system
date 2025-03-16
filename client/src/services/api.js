@@ -11,7 +11,7 @@ const api = axios.create({
 // Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
-    // Agregar logs para ver el cuerpo de la solicitud
+    // Add logs for the API body request
     console.log('API Request Config:', {
       method: config.method,
       url: `${config.baseURL}${config.url}`,

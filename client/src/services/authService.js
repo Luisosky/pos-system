@@ -9,7 +9,7 @@ const authService = {
     return response.data;
   },
   
-  // Una alternativa usando fetch directamente para el login
+  //Using fetch for the login
   login: async (credentials) => {
     try {
       const username = credentials.username?.trim();
@@ -21,7 +21,6 @@ const authService = {
       
       console.log('AuthService: Usando fetch directamente para login');
       
-      // Usar fetch en lugar de axios para probar
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -41,7 +40,7 @@ const authService = {
       
       const data = await response.json();
       
-      // Guardar token y datos del usuario
+      // Save tokens and data user 
       const { token, user } = data;
       
       if (!token || !user) {
@@ -80,13 +79,13 @@ const authService = {
     return !!localStorage.getItem('token');
   },
   
-  // Método para validar el token con el servidor
+  // Method to validate the token
   validateToken: async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
       
-      // Realizar una petición a una ruta protegida para validar el token
+      // Send token to server to validate
       const response = await fetch(`${API_URL}/auth/validate-token`, {
         method: 'GET',
         headers: {
@@ -101,7 +100,6 @@ const authService = {
       return true;
     } catch (error) {
       console.error('Error validando token:', error);
-      // Si hay un error, eliminar datos de autenticación
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       throw error;

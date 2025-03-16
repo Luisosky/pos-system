@@ -31,9 +31,9 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Pre-save hook para hashear la contraseña
+// Pre-save hook for password encryption
 userSchema.pre('save', async function(next) {
-  // Solo hashea la contraseña si ha sido modificada (o es nueva)
+  // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) return next();
   
   try {
@@ -45,7 +45,7 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Método para comparar contraseñas
+// Method to compare password for login
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
     return await bcrypt.compare(candidatePassword, this.password);

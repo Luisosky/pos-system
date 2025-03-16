@@ -37,12 +37,12 @@ exports.register = async (req, res, next) => {
 // Login
 exports.login = async (req, res, next) => {
   try {
-    // Mostrar el cuerpo completo para diagnóstico
+    
     console.log('Cuerpo completo de solicitud login:', JSON.stringify(req.body));
     
     const { username, password } = req.body;
     
-    // Validación de campos
+    
     if (!username || !password) {
       console.error('Campos incompletos:', { username: !!username, password: !!password });
       return res.status(400).json({ 
@@ -54,7 +54,7 @@ exports.login = async (req, res, next) => {
       });
     }
     
-    // Validar que username y password son strings
+  
     if (typeof username !== 'string' || typeof password !== 'string') {
       console.error('Tipo incorrecto:', { 
         usernameType: typeof username, 
@@ -67,7 +67,7 @@ exports.login = async (req, res, next) => {
     
     logger.info(`Intento de login: ${username}`);
     
-    // Buscar usuario
+    // Find user
     const user = await User.findOne({ username });
     if (!user) {
       logger.warn(`Usuario no encontrado: ${username}`);
@@ -76,7 +76,7 @@ exports.login = async (req, res, next) => {
     
     logger.info(`Usuario encontrado: ${user.username}, hash: ${user.password.substring(0, 10)}...`);
     
-    // Verificar contraseña
+  
     const isMatch = await bcrypt.compare(password, user.password);
     logger.info(`Resultado de la comparación: ${isMatch}`);
     
@@ -85,7 +85,7 @@ exports.login = async (req, res, next) => {
       return res.status(400).json({ message: 'Credenciales inválidas' });
     }
     
-    // Crear token
+    // Create token
     const payload = {
       id: user._id,
       username: user.username,
@@ -116,9 +116,8 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// Validar token
+// Validate token
 exports.validateToken = async (req, res) => {
-  // Si el middleware de autenticación permitió llegar hasta aquí, el token es válido
   res.status(200).json({ 
     valid: true, 
     user: {

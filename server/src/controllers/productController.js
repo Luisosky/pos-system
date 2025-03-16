@@ -1,18 +1,18 @@
 const Product = require('../models/Product');
 const logger = require('../utils/logger');
 
-// Obtener todos los productos
+// Get all products
 exports.getAllProducts = async (req, res, next) => {
   try {
     const { category, search } = req.query;
     let query = {};
 
-    // Filtrar por categoría si se proporciona
+    // Filtert by category if given
     if (category && category !== 'Todos') {
       query.category = category;
     }
 
-    // Búsqueda por nombre o código de barras
+    // Find by name or barcode
     if (search) {
       query = {
         ...query,
@@ -33,7 +33,7 @@ exports.getAllProducts = async (req, res, next) => {
   }
 };
 
-// Obtener un producto por ID
+// Get a product by ID
 exports.getProductById = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -50,7 +50,7 @@ exports.getProductById = async (req, res, next) => {
   }
 };
 
-// Obtener un producto por código de barras
+// Get a product by barcode
 exports.getProductByBarcode = async (req, res, next) => {
   try {
     const product = await Product.findOne({ barcode: req.params.barcode });
@@ -67,12 +67,12 @@ exports.getProductByBarcode = async (req, res, next) => {
   }
 };
 
-// Crear un nuevo producto
+// Create a new product
 exports.createProduct = async (req, res, next) => {
   try {
     const { name, price, category, barcode, stock, image, description } = req.body;
     
-    // Verificar si ya existe un producto con ese código de barras
+    // Verify if another product with the same barcode exists
     const existingProduct = await Product.findOne({ barcode });
     if (existingProduct) {
       logger.warn(`Intento de crear producto con código de barras duplicado: ${barcode}`);
@@ -98,12 +98,12 @@ exports.createProduct = async (req, res, next) => {
   }
 };
 
-// Actualizar un producto
+// Update a product
 exports.updateProduct = async (req, res, next) => {
   try {
     const { name, price, category, barcode, stock, image, description } = req.body;
     
-    // Verificar si existe otro producto con el mismo código de barras
+    // Verify if another product with the same barcode exists
     if (barcode) {
       const existingProduct = await Product.findOne({ 
         barcode, 
@@ -144,7 +144,7 @@ exports.updateProduct = async (req, res, next) => {
   }
 };
 
-// Eliminar un producto
+// Delete a product
 exports.deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
@@ -162,13 +162,13 @@ exports.deleteProduct = async (req, res, next) => {
   }
 };
 
-// Obtener todas las categorías
+// Get all categories
 exports.getCategories = async (req, res, next) => {
   try {
-    // Obtener categorías únicas
+    
     const categories = await Product.distinct('category');
     
-    // Agregar "Todos" al principio
+    
     const allCategories = ['Todos', ...categories];
     
     logger.info(`Se obtuvieron ${categories.length} categorías`);

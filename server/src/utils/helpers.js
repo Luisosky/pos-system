@@ -2,15 +2,15 @@ const bcrypt = require('bcrypt');
 const logger = require('./logger');
 
 /**
- * Hashea una contraseña usando bcrypt
- * @param {string} password - Contraseña en texto plano
- * @param {string} username - Nombre de usuario (para el sal personalizado)
- * @returns {Promise<string>} Contraseña hasheada
+ * Hash a password using bcrypt
+ * @param {string} password - Plain text password
+ * @param {string} username - Username (for custom salt)
+ * @returns {Promise<string>} Hashed password
  */
 exports.hashPassword = async (password, username) => {
   try {
     const salt = await bcrypt.genSalt(10);
-    // Incluir el nombre de usuario en el hash para mayor seguridad
+    // Include username in the password hash to make it unique
     const combinedPassword = `${username}:${password}`;
     return await bcrypt.hash(combinedPassword, salt);
   } catch (error) {
@@ -20,11 +20,11 @@ exports.hashPassword = async (password, username) => {
 };
 
 /**
- * Verifica si una contraseña coincide con su hash
- * @param {string} password - Contraseña en texto plano
- * @param {string} hash - Hash almacenado
- * @param {string} username - Nombre de usuario (para el sal personalizado)
- * @returns {Promise<boolean>} True si coinciden
+ * Verify if a password matches a hash
+ * @param {string} password - Plain text password
+ * @param {string} hash - Hashed password
+ * @param {string} username - Username (for custom salt)
+ * @returns {Promise<boolean>} True if the password matches the hash, false otherwise
  */
 exports.comparePassword = async (password, hash, username) => {
   try {

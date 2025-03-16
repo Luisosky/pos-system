@@ -1,10 +1,10 @@
 import api from './api';
 
 const productService = {
-  // Obtener todos los productos (con posibilidad de filtrado)
+  // Get all products with optional filters
   getAllProducts: async (filters = {}) => {
     try {
-      // Versión Mock para desarrollo
+      // Mock for development
       const mockProducts = [
         { id: 1, name: 'Leche', price: 25.50, category: 'Lácteos', barcode: '7501055900039', stock: 50, image: '🥛' },
         { id: 2, name: 'Pan', price: 18.00, category: 'Panadería', barcode: '7501030426035', stock: 30, image: '🍞' },
@@ -18,7 +18,7 @@ const productService = {
         { id: 10, name: 'Refresco', price: 17.50, category: 'Bebidas', barcode: '7501055363513', stock: 60, image: '🥤' }
       ];
       
-      // Filtrado de productos mock (si hay filtros)
+      // Apply filters
       let filteredProducts = [...mockProducts];
       
       if (filters.category && filters.category !== 'Todos') {
@@ -43,10 +43,10 @@ const productService = {
     }
   },
   
-  // Buscar producto por código de barras
+  // Find product by barcode
   getProductByBarcode: async (barcode) => {
     try {
-      // Versión Mock
+      // Mock version
       const mockProducts = await productService.getAllProducts();
       return mockProducts.find(p => p.barcode === barcode) || null;
       
@@ -59,10 +59,9 @@ const productService = {
     }
   },
   
-  // Buscar producto por ID
+  // Find product by ID
   getProductById: async (id) => {
     try {
-      // Versión Mock
       const mockProducts = await productService.getAllProducts();
       return mockProducts.find(p => p.id === id) || null;
       
@@ -75,7 +74,7 @@ const productService = {
     }
   },
   
-  // Método para crear un producto
+  // Create a new product
   createProduct: async (productData) => {
     try {
       const response = await api.post('/products', productData);
@@ -86,7 +85,7 @@ const productService = {
     }
   },
   
-  // Método para actualizar un producto
+  // Method to update a product
   updateProduct: async (id, productData) => {
     try {
       const response = await api.put(`/products/${id}`, productData);
@@ -97,7 +96,7 @@ const productService = {
     }
   },
   
-  // Método para eliminar un producto
+  // Method to delete a product
   deleteProduct: async (id) => {
     try {
       const response = await api.delete(`/products/${id}`);

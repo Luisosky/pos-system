@@ -2,7 +2,7 @@ import { api } from './api';
 
 const orderService = {
   createOrder: async (orderData) => {
-    // Versión para desarrollo (simula una llamada API)
+    // Example data for development
     console.log("Creando orden:", orderData);
     return {
       id: "order-" + Math.random().toString(36).substr(2, 9),
@@ -16,7 +16,7 @@ const orderService = {
   },
   
   getDailySummary: async () => {
-    // Datos de ejemplo para desarrollo
+    // Example data for development
     return {
       totalSales: 1250.75,
       orderCount: 15,
